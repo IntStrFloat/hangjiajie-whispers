@@ -1,13 +1,28 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { HeroSection } from '@/components/landing/HeroSection';
+import { AboutSection } from '@/components/landing/AboutSection';
+import { PdfPreviewSection } from '@/components/landing/PdfPreviewSection';
+import { PurchaseSection } from '@/components/landing/PurchaseSection';
 
 const Index = () => {
+  const scrollToPurchase = () => {
+    const purchaseSection = document.getElementById('purchase');
+    purchaseSection?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const handlePurchase = () => {
+    // TODO: Integrate Stripe payment
+    console.log('Purchase initiated');
+    // For now, scroll to purchase section
+    scrollToPurchase();
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
-    </div>
+    <main className="min-h-screen">
+      <HeroSection onCtaClick={scrollToPurchase} />
+      <AboutSection />
+      <PdfPreviewSection />
+      <PurchaseSection onPurchase={handlePurchase} />
+    </main>
   );
 };
 
