@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <clipPath id="rounded">
+      <rect width="64" height="64" rx="14" ry="14"/>
+    </clipPath>
+  </defs>
+  <g clip-path="url(#rounded)">
+    <rect width="64" height="64" fill="#1a3329"/>
+    <path d="M10 50 Q10 18 14 18 Q18 18 18 50 Z" fill="#3d5a4f"/>
+    <path d="M20 50 Q20 12 24 12 Q28 12 28 50 Z" fill="#4d6a5f"/>
+    <path d="M30 50 Q28 8 32 8 Q36 8 36 50 Z" fill="#5d7a6f"/>
+    <path d="M40 50 Q40 14 44 14 Q48 14 48 50 Z" fill="#4d6a5f"/>
+    <path d="M50 50 Q50 22 54 22 Q58 22 58 50 Z" fill="#3d5a4f"/>
+    <ellipse cx="32" cy="56" rx="32" ry="8" fill="#1a3329" opacity="0.5"/>
+  </g>
+</svg>
