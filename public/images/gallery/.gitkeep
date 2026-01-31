@@ -1,0 +1,8 @@
+# Положите сюда свои фотографии:
+# - yangjiajie.jpg — Территория Янцзяцзе
+# - tianmen.jpg — Окрестности горы Тянмень
+# - bailong.jpg — Лифт Байлунг
+# - grand-canyon.jpg — Гранд Каньон
+# - dragon-cave.jpg — Пещера дракона
+#
+# Затем обновите пути в src/components/landing/PhotoGallerySection.tsx

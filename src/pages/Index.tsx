@@ -1,27 +1,22 @@
-import { HeroSection } from '@/components/landing/HeroSection';
-import { AboutSection } from '@/components/landing/AboutSection';
-import { PdfPreviewSection } from '@/components/landing/PdfPreviewSection';
-import { PurchaseSection } from '@/components/landing/PurchaseSection';
+import { HeroSection } from "@/components/landing/HeroSection";
+import { AboutSection } from "@/components/landing/AboutSection";
+import { PhotoGallerySection } from "@/components/landing/PhotoGallerySection";
+import { PdfPreviewSection } from "@/components/landing/PdfPreviewSection";
+import { PurchaseSection } from "@/components/landing/PurchaseSection";
 
 const Index = () => {
   const scrollToPurchase = () => {
-    const purchaseSection = document.getElementById('purchase');
-    purchaseSection?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  const handlePurchase = () => {
-    // TODO: Integrate Stripe payment
-    console.log('Purchase initiated');
-    // For now, scroll to purchase section
-    scrollToPurchase();
+    const purchaseSection = document.getElementById("purchase");
+    purchaseSection?.scrollIntoView({ behavior: "smooth" });
   };
 
   return (
     <main className="min-h-screen">
       <HeroSection onCtaClick={scrollToPurchase} />
       <AboutSection />
+      <PhotoGallerySection />
       <PdfPreviewSection />
-      <PurchaseSection onPurchase={handlePurchase} />
+      <PurchaseSection />
     </main>
   );
 };
