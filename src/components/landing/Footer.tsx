@@ -31,7 +31,7 @@ export function Footer() {
           <div className="text-sm md:text-base font-light">
             <p>Березнёв Дмитрий Алексеевич</p>
             <p>Самозанятый</p>
-            <p>ИНН: __________</p>
+            <p>ИНН: 695005289893</p>
           </div>
         </div>
       </div>
