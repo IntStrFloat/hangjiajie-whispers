@@ -1,13 +1,25 @@
-import { motion } from 'framer-motion';
-import { useScrollAnimation } from '@/hooks/useScrollAnimation';
-import { MapPin, Route, Clock, CheckCircle, User } from 'lucide-react';
+import { motion } from "framer-motion";
+import { useScrollAnimation } from "@/hooks/useScrollAnimation";
+import {
+  MapPin,
+  Route,
+  Plane,
+  Building2,
+  Camera,
+  Ticket,
+  Bus,
+  Map,
+} from "lucide-react";
 
 const features = [
-  { icon: Route, text: 'Готовые маршруты' },
-  { icon: MapPin, text: 'Карты и ключевые точки' },
-  { icon: Clock, text: 'Где теряется время' },
-  { icon: CheckCircle, text: 'Что стоит и не стоит делать' },
-  { icon: User, text: 'Всё на основе личного опыта' },
+  { icon: Plane, text: "Как добраться и сколько дней планировать" },
+  { icon: Building2, text: "Почему не селиться в центре Чжанцзяцзе" },
+  { icon: MapPin, text: "Где жить: отели и рекомендуемое количество дней" },
+  { icon: Camera, text: "Подробно о главных локациях парка" },
+  { icon: Ticket, text: "Билеты: цены, покупка и оплата" },
+  { icon: Bus, text: "Такси, автобусы и передвижение по парку" },
+  { icon: Route, text: "Готовые маршруты на выбор для каждой локации" },
+  { icon: Map, text: "Авторские карты на русском языке" },
 ];
 
 export function PdfPreviewSection() {
@@ -21,7 +33,10 @@ export function PdfPreviewSection() {
         <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-forest-light/10 rounded-full blur-3xl" />
       </div>
 
-      <div ref={ref} className="container mx-auto px-6 md:px-12 lg:px-20 relative z-10">
+      <div
+        ref={ref}
+        className="container mx-auto px-6 md:px-12 lg:px-20 relative z-10"
+      >
         <div className="grid lg:grid-cols-2 gap-16 lg:gap-24 items-center">
           {/* PDF Mockup */}
           <motion.div
@@ -33,7 +48,7 @@ export function PdfPreviewSection() {
             {/* Floating tablet mockup */}
             <motion.div
               animate={isVisible ? { y: [0, -15, 0] } : {}}
-              transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+              transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
               className="relative z-10"
             >
               {/* Tablet frame */}
@@ -46,8 +61,12 @@ export function PdfPreviewSection() {
                       <div className="w-16 h-16 bg-accent/20 rounded-full mx-auto mb-4 flex items-center justify-center">
                         <MapPin className="w-8 h-8 text-accent" />
                       </div>
-                      <h4 className="font-serif text-xl text-foreground">Гайд по Чжанцзядзе</h4>
-                      <p className="text-sm text-muted-foreground mt-1">PDF • 24 страницы</p>
+                      <h4 className="font-serif text-xl text-foreground">
+                        Гайд по Чжанцзядзе
+                      </h4>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        PDF • 24 страницы
+                      </p>
                     </div>
 
                     {/* Sample content */}
@@ -75,7 +94,7 @@ export function PdfPreviewSection() {
                         <div
                           key={i}
                           className={`w-1.5 h-1.5 rounded-full ${
-                            i === 0 ? 'bg-accent' : 'bg-stone/30'
+                            i === 0 ? "bg-accent" : "bg-stone/30"
                           }`}
                         />
                       ))}
@@ -91,7 +110,12 @@ export function PdfPreviewSection() {
             {/* Floating elements */}
             <motion.div
               animate={isVisible ? { y: [0, -10, 0], rotate: [-3, 3, -3] } : {}}
-              transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
+              transition={{
+                duration: 5,
+                repeat: Infinity,
+                ease: "easeInOut",
+                delay: 1,
+              }}
               className="absolute -top-8 -right-8 lg:right-8 w-20 h-20 bg-card rounded-2xl shadow-xl flex items-center justify-center"
             >
               <MapPin className="w-10 h-10 text-accent" />
@@ -99,7 +123,12 @@ export function PdfPreviewSection() {
 
             <motion.div
               animate={isVisible ? { y: [0, 8, 0], rotate: [3, -3, 3] } : {}}
-              transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
+              transition={{
+                duration: 7,
+                repeat: Infinity,
+                ease: "easeInOut",
+                delay: 0.5,
+              }}
               className="absolute -bottom-4 -left-4 lg:left-8 w-16 h-16 bg-card rounded-xl shadow-lg flex items-center justify-center"
             >
               <Route className="w-8 h-8 text-forest-light" />
@@ -117,7 +146,7 @@ export function PdfPreviewSection() {
               Что внутри PDF
             </motion.h2>
 
-            <ul className="space-y-6">
+            <ul className="space-y-4">
               {features.map((feature, index) => (
                 <motion.li
                   key={feature.text}
@@ -125,15 +154,15 @@ export function PdfPreviewSection() {
                   animate={isVisible ? { opacity: 1, x: 0 } : {}}
                   transition={{
                     duration: 0.5,
-                    delay: 0.2 + index * 0.1,
+                    delay: 0.2 + index * 0.06,
                     ease: [0.25, 0.1, 0.25, 1],
                   }}
-                  className="flex items-center gap-4"
+                  className="flex items-center gap-3"
                 >
-                  <div className="w-12 h-12 bg-card rounded-xl shadow-sm flex items-center justify-center flex-shrink-0">
-                    <feature.icon className="w-6 h-6 text-accent" />
+                  <div className="w-8 h-8 bg-card rounded-lg shadow-sm flex items-center justify-center flex-shrink-0">
+                    <feature.icon className="w-4 h-4 text-accent" />
                   </div>
-                  <span className="text-lg md:text-xl text-foreground font-light">
+                  <span className="text-base md:text-lg text-foreground font-light">
                     {feature.text}
                   </span>
                 </motion.li>
