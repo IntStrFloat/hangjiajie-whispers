@@ -3,6 +3,7 @@ import { AboutSection } from "@/components/landing/AboutSection";
 import { PhotoGallerySection } from "@/components/landing/PhotoGallerySection";
 import { PdfPreviewSection } from "@/components/landing/PdfPreviewSection";
 import { PurchaseSection } from "@/components/landing/PurchaseSection";
+import { Footer } from "@/components/landing/Footer";
 
 const Index = () => {
   const scrollToPurchase = () => {
@@ -17,6 +18,7 @@ const Index = () => {
       <PhotoGallerySection />
       <PdfPreviewSection />
       <PurchaseSection />
+      <Footer />
     </main>
   );
 };
