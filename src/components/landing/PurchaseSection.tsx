@@ -81,7 +81,20 @@ export function PurchaseSection() {
             />
           </motion.div>
 
-          {/* Features */}
+          {/* Способ получения и характеристики (требования Robokassa) */}
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={isVisible ? { opacity: 1 } : {}}
+            transition={{
+              duration: 0.5,
+              delay: 0.4,
+              ease: [0.25, 0.1, 0.25, 1],
+            }}
+            className="text-sm text-mist/60 mt-6"
+          >
+            Получение: ссылка на PDF на вашу почту сразу после оплаты. Возврат и
+            отказ — в оферте.
+          </motion.p>
           <motion.div
             initial={{ opacity: 0 }}
             animate={isVisible ? { opacity: 1 } : {}}

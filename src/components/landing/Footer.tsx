@@ -1,5 +1,12 @@
 import { Link } from "react-router-dom";
-import { ExternalLink, FileText, Mail, Send } from "lucide-react";
+import { ExternalLink, FileText, Mail, Phone, Send } from "lucide-react";
+
+// Контакты и реквизиты: замените на свои перед подключением приёма платежей
+const CONTACT_EMAIL = "gostlix20201@gmail.com";
+const CONTACT_TELEGRAM = "https://t.me/frontendEnjoyer";
+const CONTACT_TELEGRAM_LABEL = "@frontendEnjoyer";
+const CONTACT_PHONE: string = "+7 (915) 739-75-70"; // Укажите телефон для соответствия требованиям Robokassa (например: "+7 (999) 123-45-67")
+const SELLER_CITY = "Москва"; // Город для самозанятого (рекомендация Robokassa)
 
 export function Footer() {
   return (
@@ -34,43 +41,53 @@ export function Footer() {
           </div>
           <p className="text-sm text-primary-foreground/70 max-w-xl">
             Доставка: ссылка на PDF на вашу почту сразу после оплаты. Условия
-            возврата — в{" "}
+            возврата денежных средств и отказа от услуги — в{" "}
             <Link to="/oferta" className="underline hover:no-underline">
               оферте
             </Link>
             .
           </p>
 
-          {/* Связь */}
+          {/* Контакты: телефон, e-mail, Telegram (требования Robokassa) */}
           <div className="flex flex-col items-center gap-2">
             <p className="font-medium text-primary-foreground">
               Связаться со мной
             </p>
             <div className="flex flex-wrap justify-center gap-4">
+              {CONTACT_PHONE ? (
+                <a
+                  href={`tel:${CONTACT_PHONE.replace(/\s/g, "")}`}
+                  className="inline-flex items-center gap-2 text-sm md:text-base hover:text-primary-foreground transition-colors"
+                >
+                  <Phone className="w-4 h-4 flex-shrink-0" />
+                  {CONTACT_PHONE}
+                </a>
+              ) : null}
               <a
-                href="mailto:gostlix20201@gmail.com"
+                href={`mailto:${CONTACT_EMAIL}`}
                 className="inline-flex items-center gap-2 text-sm md:text-base hover:text-primary-foreground transition-colors"
               >
                 <Mail className="w-4 h-4 flex-shrink-0" />
-                gostlix20201@gmail.com
+                {CONTACT_EMAIL}
               </a>
               <a
-                href="https://t.me/frontendEnjoyer"
+                href={CONTACT_TELEGRAM}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 text-sm md:text-base hover:text-primary-foreground transition-colors"
               >
                 <Send className="w-4 h-4 flex-shrink-0" />
-                @frontendEnjoyer
+                {CONTACT_TELEGRAM_LABEL}
               </a>
             </div>
           </div>
 
-          {/* Информация о владельце */}
+          {/* Юридическая информация: самозанятый ФИО, ИНН, город (требования Robokassa) */}
           <div className="text-sm md:text-base font-light">
             <p>Березнёв Дмитрий Алексеевич</p>
             <p>Самозанятый</p>
             <p>ИНН: 695005289893</p>
+            <p>г. {SELLER_CITY}</p>
           </div>
         </div>
       </div>
