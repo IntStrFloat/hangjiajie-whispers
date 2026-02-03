@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { Zap, Infinity, WifiOff } from "lucide-react";
@@ -6,7 +7,7 @@ import { PaymentHandler } from "@/components/payment/PaymentHandler";
 export function PurchaseSection() {
   const { ref, isVisible } = useScrollAnimation({ threshold: 0.2 });
 
-  const amount = 499;
+  const amount = 1499;
   const description = "Гид по Чжанцзяцзе";
 
   return (
@@ -43,7 +44,8 @@ export function PurchaseSection() {
             }}
             className="text-lg md:text-xl text-mist/70 font-light mb-12"
           >
-            Один файл, который заменяет часы подготовки
+            Гайд по Чжанцзяцзе: маршруты, карты, советы по отелям, билетам и
+            передвижению. Один файл, который заменяет часы подготовки к поездке.
           </motion.p>
 
           {/* Price */}
@@ -92,8 +94,19 @@ export function PurchaseSection() {
             }}
             className="text-sm text-mist/60 mt-6"
           >
-            Получение: ссылка на гайд на вашу почту сразу после оплаты. Возврат
-            и отказ — в оферте.
+            <strong>Способ получения:</strong> После успешной оплаты на
+            указанную вами электронную почту будет отправлена ссылка для
+            скачивания гайда. Обычно письмо приходит в течение нескольких минут.
+            Если письма нет, проверьте папку «Спам» или обратитесь по контактам
+            в подвале сайта. Условия возврата денежных средств и отказа от
+            услуги указаны в{" "}
+            <Link
+              to="/oferta"
+              className="underline hover:no-underline text-mist/80"
+            >
+              оферте
+            </Link>
+            .
           </motion.p>
           <motion.div
             initial={{ opacity: 0 }}

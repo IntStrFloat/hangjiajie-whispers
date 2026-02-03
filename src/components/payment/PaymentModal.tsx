@@ -491,7 +491,7 @@ const generateRobokassaSignature = (
   shpParams?: Record<string, string>,
 ): string => {
   // Формируем базовую строку: MerchantLogin:OutSum:InvId:Password#1
-  // ВАЖНО: OutSum должен быть строкой с точкой (например, "499.00"), не числом
+  // ВАЖНО: OutSum должен быть строкой с точкой (например, "1499.00"), не числом
   const outSum = typeof amount === "number" ? amount.toFixed(2) : amount;
   let signatureString = `${merchantLogin}:${outSum}:${invoiceId}:${password1}`;
 
