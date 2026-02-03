@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { PaymentModal } from "./PaymentModal";
+import { OrderModal } from "./OrderModal";
 import { Button } from "@/components/ui/button";
 import { Download, Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -7,25 +8,33 @@ import { toast } from "sonner";
 interface PaymentHandlerProps {
   amount: number;
   description: string;
+  productName?: string;
   pdfUrl?: string; // URL для скачивания PDF после оплаты
 }
 
 export const PaymentHandler = ({
   amount,
   description,
+  productName = "Гайд по Чжанцзяцзе",
   pdfUrl,
 }: PaymentHandlerProps) => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [isPaid, setIsPaid] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
 
   const handlePurchase = () => {
-    setIsModalOpen(true);
+    setIsOrderModalOpen(true);
+  };
+
+  const handleOrderContinue = () => {
+    setIsOrderModalOpen(false);
+    setIsPaymentModalOpen(true);
   };
 
   const handlePaymentSuccess = () => {
     setIsPaid(true);
-    setIsModalOpen(false);
+    setIsPaymentModalOpen(false);
     toast.success("Платеж успешно обработан!");
   };
 
@@ -102,9 +111,16 @@ export const PaymentHandler = ({
         Купить и скачать PDF
       </Button>
 
+      <OrderModal
+        isOpen={isOrderModalOpen}
+        onClose={() => setIsOrderModalOpen(false)}
+        productName={productName}
+        amount={amount}
+        onContinue={handleOrderContinue}
+      />
       <PaymentModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        isOpen={isPaymentModalOpen}
+        onClose={() => setIsPaymentModalOpen(false)}
         amount={amount}
         description={description}
         onSuccess={handlePaymentSuccess}

@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { ExternalLink, FileText, Mail, Send } from "lucide-react";
 
 export function Footer() {
@@ -5,8 +6,15 @@ export function Footer() {
     <footer className="bg-forest-deep py-12 md:py-16">
       <div className="container mx-auto px-6 md:px-12 lg:px-20">
         <div className="flex flex-col items-center gap-6 text-center text-primary-foreground/80">
-          {/* Политика и оферта */}
+          {/* Политика, оферта, доставка и возврат */}
           <div className="flex flex-wrap justify-center gap-6 md:gap-8">
+            <Link
+              to="/privacy"
+              className="inline-flex items-center gap-2 text-sm md:text-base hover:text-primary-foreground transition-colors"
+            >
+              <FileText className="w-4 h-4 flex-shrink-0" />
+              Политика конфиденциальности
+            </Link>
             <a
               href="https://www.consultant.ru/document/cons_doc_LAW_61801/"
               target="_blank"
@@ -14,18 +22,24 @@ export function Footer() {
               className="inline-flex items-center gap-2 text-sm md:text-base hover:text-primary-foreground transition-colors"
             >
               <ExternalLink className="w-4 h-4 flex-shrink-0" />О персональных
-              данных
+              данных (152-ФЗ)
             </a>
-            <a
-              href="/oferta.pdf"
-              target="_blank"
-              rel="noopener noreferrer"
+            <Link
+              to="/oferta"
               className="inline-flex items-center gap-2 text-sm md:text-base hover:text-primary-foreground transition-colors"
             >
               <FileText className="w-4 h-4 flex-shrink-0" />
               Публичная оферта
-            </a>
+            </Link>
           </div>
+          <p className="text-sm text-primary-foreground/70 max-w-xl">
+            Доставка: ссылка на PDF на вашу почту сразу после оплаты. Условия
+            возврата — в{" "}
+            <Link to="/oferta" className="underline hover:no-underline">
+              оферте
+            </Link>
+            .
+          </p>
 
           {/* Связь */}
           <div className="flex flex-col items-center gap-2">

@@ -76,6 +76,7 @@ export function PurchaseSection() {
             <PaymentHandler
               amount={amount}
               description={description}
+              productName="Гайд по Чжанцзяцзе"
               pdfUrl={import.meta.env.VITE_PDF_URL}
             />
           </motion.div>
