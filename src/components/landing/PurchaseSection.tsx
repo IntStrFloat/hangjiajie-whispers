@@ -7,7 +7,7 @@ export function PurchaseSection() {
   const { ref, isVisible } = useScrollAnimation({ threshold: 0.2 });
 
   const amount = 499;
-  const description = "PDF-гид по Чжанцзяцзе";
+  const description = "Гид по Чжанцзяцзе";
 
   return (
     <section
@@ -30,7 +30,7 @@ export function PurchaseSection() {
             className="font-serif text-3xl md:text-4xl lg:text-5xl text-primary-foreground leading-tight mb-6"
           >
             Получить мой опыт
-            <br />в формате PDF
+            <br />в формате гайда
           </motion.h2>
 
           <motion.p
@@ -92,8 +92,8 @@ export function PurchaseSection() {
             }}
             className="text-sm text-mist/60 mt-6"
           >
-            Получение: ссылка на PDF на вашу почту сразу после оплаты. Возврат и
-            отказ — в оферте.
+            Получение: ссылка на гайд на вашу почту сразу после оплаты. Возврат
+            и отказ — в оферте.
           </motion.p>
           <motion.div
             initial={{ opacity: 0 }}

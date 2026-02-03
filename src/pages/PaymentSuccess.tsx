@@ -88,9 +88,9 @@ const PaymentSuccess = () => {
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-      toast.success("PDF успешно скачан!");
+      toast.success("Гайд успешно скачан!");
     } catch (error) {
-      toast.error("Ошибка при скачивании PDF");
+      toast.error("Ошибка при скачивании гайда");
       console.error(error);
     } finally {
       setIsDownloading(false);
@@ -162,7 +162,7 @@ const PaymentSuccess = () => {
               Спасибо за покупку!
             </h1>
             <p className="text-muted-foreground mb-6">
-              Платеж успешно обработан. Теперь вы можете скачать PDF-файл.
+              Платеж успешно обработан. Теперь вы можете скачать гайд.
             </p>
             <div className="space-y-3">
               <Button
@@ -179,7 +179,7 @@ const PaymentSuccess = () => {
                 ) : (
                   <>
                     <Download className="w-5 h-5 mr-2" />
-                    Скачать PDF
+                    Скачать гайд
                   </>
                 )}
               </Button>

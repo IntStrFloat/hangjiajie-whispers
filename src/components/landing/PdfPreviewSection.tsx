@@ -65,7 +65,7 @@ export function PdfPreviewSection() {
                         Гайд по Чжанцзядзе
                       </h4>
                       <p className="text-sm text-muted-foreground mt-1">
-                        PDF • 24 страницы
+                        Гайд • 24 страницы
                       </p>
                     </div>
 
@@ -143,7 +143,7 @@ export function PdfPreviewSection() {
               transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
               className="font-serif text-3xl md:text-4xl lg:text-5xl text-foreground leading-tight mb-10"
             >
-              Что внутри PDF
+              Что внутри гайда
             </motion.h2>
 
             <ul className="space-y-4">

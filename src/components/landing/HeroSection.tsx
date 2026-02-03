@@ -1,8 +1,8 @@
-import { motion, useScroll, useTransform } from 'framer-motion';
-import { useRef } from 'react';
-import { Button } from '@/components/ui/button';
-import { useIsMobile } from '@/hooks/use-mobile';
-import heroImage from '@/assets/hero-zhangjiajie.jpg';
+import { motion, useScroll, useTransform } from "framer-motion";
+import { useRef } from "react";
+import { Button } from "@/components/ui/button";
+import { useIsMobile } from "@/hooks/use-mobile";
+import heroImage from "@/assets/hero-zhangjiajie.jpg";
 
 interface HeroSectionProps {
   onCtaClick: () => void;
@@ -11,17 +11,20 @@ interface HeroSectionProps {
 export function HeroSection({ onCtaClick }: HeroSectionProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
-  
+
   const { scrollYProgress } = useScroll({
     target: containerRef,
-    offset: ['start start', 'end start'],
+    offset: ["start start", "end start"],
   });
 
-  const y = useTransform(scrollYProgress, [0, 1], ['0%', '30%']);
+  const y = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
   const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
 
   return (
-    <section ref={containerRef} className="relative min-h-screen overflow-hidden">
+    <section
+      ref={containerRef}
+      className="relative min-h-screen overflow-hidden"
+    >
       {/* Parallax Background Image */}
       <motion.div
         style={{ y }}
@@ -52,13 +55,19 @@ export function HeroSection({ onCtaClick }: HeroSectionProps) {
           >
             Мой опыт путешествия
             <br />
-            <span className="text-mist/90">по национальному парку Чжанцзядзе</span>
+            <span className="text-mist/90">
+              по национальному парку Чжанцзядзе
+            </span>
           </motion.h1>
 
           <motion.p
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
+            transition={{
+              duration: 0.8,
+              delay: 0.5,
+              ease: [0.25, 0.1, 0.25, 1],
+            }}
             className="text-lg md:text-xl text-mist/80 font-light max-w-2xl mb-10 md:mb-12"
           >
             Маршруты, места и советы, которые я бы хотел получить перед поездкой
@@ -69,14 +78,18 @@ export function HeroSection({ onCtaClick }: HeroSectionProps) {
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.8, ease: [0.25, 0.1, 0.25, 1] }}
+              transition={{
+                duration: 0.6,
+                delay: 0.8,
+                ease: [0.25, 0.1, 0.25, 1],
+              }}
             >
               <Button
                 onClick={onCtaClick}
                 size="lg"
                 className="bg-primary-foreground text-primary hover:bg-primary-foreground/90 text-base md:text-lg px-8 md:px-12 py-6 md:py-7 rounded-full font-medium transition-all duration-300 hover:scale-105 hover:shadow-2xl"
               >
-                Получить мой PDF-гайд
+                Получить мой гайд
               </Button>
             </motion.div>
           )}
@@ -109,12 +122,12 @@ export function HeroSection({ onCtaClick }: HeroSectionProps) {
       >
         <motion.div
           animate={{ y: [0, 10, 0] }}
-          transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
           className="w-6 h-10 border-2 border-mist/30 rounded-full flex justify-center pt-2"
         >
           <motion.div
             animate={{ opacity: [1, 0.3, 1], y: [0, 12, 0] }}
-            transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
             className="w-1.5 h-1.5 bg-mist/60 rounded-full"
           />
         </motion.div>

@@ -9,7 +9,7 @@ interface PaymentHandlerProps {
   amount: number;
   description: string;
   productName?: string;
-  pdfUrl?: string; // URL для скачивания PDF после оплаты
+  pdfUrl?: string; // URL для скачивания гайда после оплаты
 }
 
 export const PaymentHandler = ({
@@ -61,7 +61,7 @@ export const PaymentHandler = ({
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-      toast.success("PDF успешно скачан!");
+      toast.success("Гайд успешно скачан!");
     } catch (error) {
       toast.error("Ошибка при скачивании PDF");
       console.error(error);
@@ -77,7 +77,7 @@ export const PaymentHandler = ({
           <p className="text-lg text-primary-foreground mb-2">
             Спасибо за покупку!
           </p>
-          <p className="text-mist/70">Теперь вы можете скачать PDF</p>
+          <p className="text-mist/70">Теперь вы можете скачать гайд</p>
         </div>
         <Button
           onClick={handleDownload}
@@ -93,7 +93,7 @@ export const PaymentHandler = ({
           ) : (
             <>
               <Download className="w-5 h-5 mr-2" />
-              Скачать PDF
+              Скачать гайд
             </>
           )}
         </Button>
@@ -108,7 +108,7 @@ export const PaymentHandler = ({
         size="lg"
         className="bg-primary-foreground text-forest-deep hover:bg-primary-foreground/90 text-lg px-12 py-7 rounded-full font-medium transition-all duration-300 hover:scale-105 hover:shadow-2xl"
       >
-        Купить и скачать PDF
+        Купить и скачать гайд
       </Button>
 
       <OrderModal

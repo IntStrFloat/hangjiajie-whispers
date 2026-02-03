@@ -40,7 +40,7 @@ export function Footer() {
             </Link>
           </div>
           <p className="text-sm text-primary-foreground/70 max-w-xl">
-            Доставка: ссылка на PDF на вашу почту сразу после оплаты. Условия
+            Доставка: ссылка на гайд на вашу почту сразу после оплаты. Условия
             возврата денежных средств и отказа от услуги — в{" "}
             <Link to="/oferta" className="underline hover:no-underline">
               оферте
