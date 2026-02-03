@@ -35,8 +35,8 @@ const PaymentSuccess = () => {
         return;
       }
 
-      // Проверяем подпись
-      const password2 = import.meta.env.VITE_ROBOKASSA_PASSWORD_2;
+      // Проверяем подпись редиректа SuccessURL (документация: OutSum:InvId:Пароль#1)
+      const password1 = import.meta.env.VITE_ROBOKASSA_PASSWORD_1;
       const savedInvoiceId = sessionStorage.getItem("robokassa_invoice_id");
 
       if (savedInvoiceId !== invoiceId) {
@@ -45,11 +45,11 @@ const PaymentSuccess = () => {
         return;
       }
 
-      if (password2) {
-        const expectedSignature = generateRobokassaResultSignature(
+      if (password1) {
+        const expectedSignature = generateSuccessUrlSignature(
           outSum,
           invoiceId,
-          password2,
+          password1,
         );
 
         if (signature.toLowerCase() !== expectedSignature.toLowerCase()) {
@@ -97,12 +97,13 @@ const PaymentSuccess = () => {
     }
   };
 
-  const generateRobokassaResultSignature = (
+  // Подпись для SuccessURL по документации: OutSum:InvId:Пароль#1
+  const generateSuccessUrlSignature = (
     outSum: string,
     invoiceId: string,
-    password2: string,
+    password1: string,
   ): string => {
-    const signatureString = `${outSum}:${invoiceId}:${password2}`;
+    const signatureString = `${outSum}:${invoiceId}:${password1}`;
     return CryptoJS.MD5(signatureString).toString();
   };
 

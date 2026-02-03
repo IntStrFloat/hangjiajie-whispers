@@ -110,7 +110,7 @@ export const PaymentModal = ({
     }
   }, [isOpen, onError]);
 
-  // Инициализация платежа через Robokassa
+  // Инициализация платежа через Robokassa (документация: Интерфейс оплаты, типовая последовательность)
   const handleRobokassaPayment = async () => {
     setIsLoading(true);
 
@@ -119,6 +119,8 @@ export const PaymentModal = ({
       const isTest = import.meta.env.VITE_ROBOKASSA_TEST === "1" ? "1" : "0";
       const apiUrl = import.meta.env.VITE_ROBOKASSA_API_URL;
       const useIframeMode = import.meta.env.VITE_ROBOKASSA_USE_IFRAME === "1";
+      // Description: до 100 символов (документация Robokassa)
+      const descriptionSafe = String(description).slice(0, 100);
 
       if (!merchantLogin) {
         onError(
@@ -156,7 +158,7 @@ export const PaymentModal = ({
             merchantLogin,
             amount,
             invoiceId,
-            description,
+            description: descriptionSafe,
             isTest,
             successUrl: `${window.location.origin}/payment-success`,
             failUrl: `${window.location.origin}/payment-success`,
@@ -189,13 +191,12 @@ export const PaymentModal = ({
           password1,
         );
 
-        // Если используется iFrame, запускаем через виджет
         if (useIframeMode && window.Robokassa) {
           startIframePayment({
             merchantLogin,
             amount,
             invoiceId,
-            description,
+            description: descriptionSafe,
             signature,
             isTest,
           });
@@ -204,7 +205,7 @@ export const PaymentModal = ({
             merchantLogin,
             amount,
             invoiceId,
-            description,
+            description: descriptionSafe,
             signature,
             isTest,
           });
@@ -302,6 +303,7 @@ export const PaymentModal = ({
     successUrl?: string;
     failUrl?: string;
   }) => {
+    // URL по документации. Для подтверждения оплаты на стороне сервера настройте ResultURL в ЛК и скрипт, возвращающий OK{InvId}.
     const robokassaUrl =
       import.meta.env.VITE_ROBOKASSA_URL ||
       "https://auth.robokassa.ru/Merchant/Index.aspx";
@@ -311,14 +313,13 @@ export const PaymentModal = ({
     const failUrl =
       params.failUrl || `${window.location.origin}/payment-success`;
 
-    // Создаем скрытую форму для отправки на Robokassa
     const form = document.createElement("form");
     form.method = "POST";
     form.action = robokassaUrl;
+    form.setAttribute("accept-charset", "UTF-8");
     form.style.display = "none";
 
-    // Добавляем параметры
-    // ВАЖНО: SuccessURL и FailURL не участвуют в подписи для базового случая
+    // Параметры по документации. SuccessURL/FailURL в подпись не входят.
     const fields: Record<string, string> = {
       MerchantLogin: params.merchantLogin,
       OutSum: params.amount.toFixed(2),
@@ -479,10 +480,9 @@ export const PaymentModal = ({
   );
 };
 
-// Генерация подписи для Robokassa (MD5)
-// Формат согласно документации: MerchantLogin:OutSum:InvId:Password#1
-// Если InvId не передается, используется пустой слот: MerchantLogin:OutSum::Password#1
-// Если есть пользовательские параметры Shp_*, они добавляются после пароля в алфавитном порядке
+// Генерация подписи для запроса на оплату (документация: «Сборка подписи SignatureValue»).
+// Строка: MerchantLogin:OutSum:InvId:Пароль#1[:Shp_key=value...]. Shp_* — по алфавиту.
+// InvId рекомендуем передавать уникальным (1..9223372036854775807).
 const generateRobokassaSignature = (
   merchantLogin: string,
   amount: number,
