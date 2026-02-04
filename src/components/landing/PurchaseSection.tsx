@@ -7,7 +7,7 @@ import { PaymentHandler } from "@/components/payment/PaymentHandler";
 export function PurchaseSection() {
   const { ref, isVisible } = useScrollAnimation({ threshold: 0.2 });
 
-  const amount = 1499;
+  const amount = 1;
   const description = "Гид по Чжанцзяцзе";
 
   return (
