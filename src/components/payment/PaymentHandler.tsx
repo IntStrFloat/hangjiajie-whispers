@@ -12,6 +12,11 @@ interface PaymentHandlerProps {
   pdfUrl?: string; // URL для скачивания гайда после оплаты
 }
 
+interface CustomerData {
+  name: string;
+  email: string;
+}
+
 export const PaymentHandler = ({
   amount,
   description,
@@ -22,12 +27,14 @@ export const PaymentHandler = ({
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [isPaid, setIsPaid] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [customerData, setCustomerData] = useState<CustomerData | null>(null);
 
   const handlePurchase = () => {
     setIsOrderModalOpen(true);
   };
 
-  const handleOrderContinue = () => {
+  const handleOrderContinue = (data: CustomerData) => {
+    setCustomerData(data);
     setIsOrderModalOpen(false);
     setIsPaymentModalOpen(true);
   };
@@ -123,6 +130,8 @@ export const PaymentHandler = ({
         onClose={() => setIsPaymentModalOpen(false)}
         amount={amount}
         description={description}
+        customerEmail={customerData?.email || ""}
+        customerName={customerData?.name || ""}
         onSuccess={handlePaymentSuccess}
         onError={handlePaymentError}
       />

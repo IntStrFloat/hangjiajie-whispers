@@ -15,6 +15,8 @@ interface PaymentModalProps {
   onClose: () => void;
   amount: number;
   description: string;
+  customerEmail: string;
+  customerName: string;
   onSuccess: () => void;
   onError: (error: string) => void;
 }
@@ -32,6 +34,8 @@ export const PaymentModal = ({
   onClose,
   amount,
   description,
+  customerEmail,
+  customerName,
   onError,
 }: PaymentModalProps) => {
   const [isLoading, setIsLoading] = useState(false);
@@ -55,6 +59,8 @@ export const PaymentModal = ({
           returnUrl,
           metadata: {
             product: "zhangjiajie-guide",
+            customerEmail,
+            customerName,
           },
         }),
       });

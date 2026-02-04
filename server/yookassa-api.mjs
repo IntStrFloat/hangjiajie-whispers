@@ -8,14 +8,15 @@
  * - GET /api/payment/:id — проверка статуса платежа
  *
  * Запуск: node server/yookassa-api.mjs
- * Переменные окружения: YOOKASSA_SHOP_ID, YOOKASSA_SECRET_KEY, PORT
+ * Переменные окружения: YOOKASSA_SHOP_ID, YOOKASSA_SECRET_KEY, PORT, SMTP_*
  */
 
 import http from "node:http";
 import { randomUUID } from "node:crypto";
-import { readFileSync } from "node:fs";
+import { readFileSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { createTransport } from "nodemailer";
 
 // Загрузка переменных из .env файла
 const __filename = fileURLToPath(import.meta.url);
@@ -45,12 +46,100 @@ const SHOP_ID = process.env.YOOKASSA_SHOP_ID;
 const SECRET_KEY = process.env.YOOKASSA_SECRET_KEY;
 const YOOKASSA_API_URL = "https://api.yookassa.ru/v3";
 
+// SMTP настройки для отправки email
+const SMTP_HOST = process.env.SMTP_HOST;
+const SMTP_PORT = Number(process.env.SMTP_PORT) || 587;
+const SMTP_USER = process.env.SMTP_USER;
+const SMTP_PASS = process.env.SMTP_PASS;
+const SMTP_FROM = process.env.SMTP_FROM || SMTP_USER;
+
+// Путь к PDF файлу (имя файла из .env или по умолчанию)
+const PDF_FILENAME = process.env.PDF_FILENAME || "Гайд.pdf";
+const PDF_PATH = join(__dirname, "..", "public", PDF_FILENAME);
+
 // CORS заголовки для разработки
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type",
 };
+
+/**
+ * Создание SMTP транспорта для отправки email
+ */
+function createEmailTransport() {
+  if (!SMTP_HOST || !SMTP_USER || !SMTP_PASS) {
+    console.warn("SMTP не настроен. Email не будут отправляться.");
+    return null;
+  }
+
+  return createTransport({
+    host: SMTP_HOST,
+    port: SMTP_PORT,
+    secure: SMTP_PORT === 465,
+    auth: {
+      user: SMTP_USER,
+      pass: SMTP_PASS,
+    },
+  });
+}
+
+const emailTransport = createEmailTransport();
+
+/**
+ * Отправка email с PDF гайдом
+ */
+async function sendGuideEmail(customerEmail, customerName) {
+  if (!emailTransport) {
+    console.error("SMTP не настроен, email не отправлен");
+    return false;
+  }
+
+  if (!existsSync(PDF_PATH)) {
+    console.error(`PDF файл не найден: ${PDF_PATH}`);
+    return false;
+  }
+
+  const pdfBuffer = readFileSync(PDF_PATH);
+
+  const mailOptions = {
+    from: SMTP_FROM,
+    to: customerEmail,
+    subject: "Ваш гайд по Чжанцзяцзе",
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h1 style="color: #2d5016;">Спасибо за покупку!</h1>
+        <p>Здравствуйте${customerName ? `, ${customerName}` : ""}!</p>
+        <p>Благодарим вас за покупку гайда по Чжанцзяцзе.</p>
+        <p>Ваш гайд прикреплён к этому письму. Скачайте его и наслаждайтесь путешествием!</p>
+        <p>Если у вас возникнут вопросы, пишите на <a href="mailto:gostlix20201@gmail.com">gostlix20201@gmail.com</a></p>
+        <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
+        <p style="color: #666; font-size: 12px;">
+          Березнёв Дмитрий Алексеевич<br>
+          Самозанятый, ИНН: 695005289893
+        </p>
+      </div>
+    `,
+    attachments: [
+      {
+        filename: "Гайд-по-Чжанцзяцзе.pdf",
+        content: pdfBuffer,
+        contentType: "application/pdf",
+      },
+    ],
+  };
+
+  try {
+    const info = await emailTransport.sendMail(mailOptions);
+    console.log(
+      `Email отправлен: ${customerEmail}, messageId: ${info.messageId}`,
+    );
+    return true;
+  } catch (error) {
+    console.error(`Ошибка отправки email на ${customerEmail}:`, error.message);
+    return false;
+  }
+}
 
 /**
  * Парсинг JSON тела запроса
@@ -163,15 +252,16 @@ const successfulPayments = new Map();
  * Обработка webhook от ЮKassa
  * Документация: https://yookassa.ru/developers/using-api/webhooks
  */
-function handleWebhook(notification) {
+async function handleWebhook(notification) {
   const { event, object } = notification;
 
   console.log(`YooKassa webhook: ${event}`, {
     paymentId: object?.id,
     status: object?.status,
+    metadata: object?.metadata,
   });
 
-  // Сохраняем информацию об успешном платеже
+  // Сохраняем информацию об успешном платеже и отправляем email
   if (event === "payment.succeeded" && object?.id) {
     successfulPayments.set(object.id, {
       status: "succeeded",
@@ -182,6 +272,22 @@ function handleWebhook(notification) {
       paidAt: new Date().toISOString(),
     });
     console.log(`Payment ${object.id} marked as successful`);
+
+    // Отправляем email с гайдом
+    const customerEmail = object.metadata?.customerEmail;
+    const customerName = object.metadata?.customerName;
+
+    if (customerEmail) {
+      console.log(`Sending guide to ${customerEmail}...`);
+      const emailSent = await sendGuideEmail(customerEmail, customerName);
+      if (emailSent) {
+        console.log(`Guide sent successfully to ${customerEmail}`);
+      } else {
+        console.error(`Failed to send guide to ${customerEmail}`);
+      }
+    } else {
+      console.warn(`No customer email in payment metadata for ${object.id}`);
+    }
   }
 
   if (event === "payment.canceled" && object?.id) {
@@ -223,7 +329,12 @@ const server = http.createServer(async (req, res) => {
 
     // Health check endpoint
     if (req.method === "GET" && pathname === "/api/health") {
-      sendJson(res, 200, { status: "ok", timestamp: new Date().toISOString() });
+      sendJson(res, 200, {
+        status: "ok",
+        timestamp: new Date().toISOString(),
+        smtp: emailTransport ? "configured" : "not configured",
+        pdfExists: existsSync(PDF_PATH),
+      });
       return;
     }
 
@@ -233,6 +344,7 @@ const server = http.createServer(async (req, res) => {
       console.log("Create payment request:", {
         amount: body.amount,
         returnUrl: body.returnUrl,
+        customerEmail: body.metadata?.customerEmail,
       });
 
       if (!body.amount || body.amount <= 0) {
@@ -269,7 +381,7 @@ const server = http.createServer(async (req, res) => {
       // Проверка подлинности webhook (по IP или статусу объекта)
       // В продакшене рекомендуется проверять IP-адрес отправителя
 
-      handleWebhook(body);
+      await handleWebhook(body);
 
       // ЮKassa ожидает HTTP 200 для подтверждения получения
       res.writeHead(200, { "Content-Type": "text/plain" });
@@ -320,4 +432,10 @@ server.listen(PORT, () => {
   console.log(`  POST /api/create-payment — создание платежа`);
   console.log(`  POST /api/webhook — webhook от ЮKassa`);
   console.log(`  GET /api/payment/:id — проверка статуса платежа`);
+  console.log(
+    `\nEmail configuration: ${emailTransport ? "OK" : "NOT CONFIGURED"}`,
+  );
+  console.log(
+    `PDF file: ${existsSync(PDF_PATH) ? "OK" : "NOT FOUND"} (${PDF_PATH})`,
+  );
 });
