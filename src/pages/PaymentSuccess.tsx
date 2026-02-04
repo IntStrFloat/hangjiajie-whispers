@@ -4,8 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Download, Loader2, CheckCircle2, XCircle } from "lucide-react";
 import { toast } from "sonner";
 
-// URL API сервера (тот же домен, проксируется через Nginx)
+// URL API сервера (в разработке используем локальный, в продакшене — тот же домен)
 const getApiUrl = (): string => {
+  if (import.meta.env.DEV) {
+    return "http://localhost:3001";
+  }
   return window.location.origin;
 };
 

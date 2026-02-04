@@ -19,8 +19,11 @@ interface PaymentModalProps {
   onError: (error: string) => void;
 }
 
-// URL API сервера (тот же домен, проксируется через Nginx)
+// URL API сервера (в разработке используем локальный, в продакшене — тот же домен)
 const getApiUrl = (): string => {
+  if (import.meta.env.DEV) {
+    return "http://localhost:3001";
+  }
   return window.location.origin;
 };
 
