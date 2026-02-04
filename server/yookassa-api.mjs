@@ -53,6 +53,10 @@ const SMTP_USER = process.env.SMTP_USER;
 const SMTP_PASS = process.env.SMTP_PASS;
 const SMTP_FROM = process.env.SMTP_FROM || SMTP_USER;
 
+// Resend API (альтернатива SMTP, если порты заблокированы)
+const RESEND_API_KEY = process.env.RESEND_API_KEY;
+const RESEND_FROM = process.env.RESEND_FROM || "onboarding@resend.dev";
+
 // Путь к PDF файлу (имя файла из .env или по умолчанию)
 const PDF_FILENAME = process.env.PDF_FILENAME || "Гайд.pdf";
 const PDF_PATH = join(__dirname, "..", "public", PDF_FILENAME);
@@ -73,6 +77,8 @@ function createEmailTransport() {
     return null;
   }
 
+  console.log(`SMTP config: ${SMTP_HOST}:${SMTP_PORT}, user: ${SMTP_USER}`);
+
   return createTransport({
     host: SMTP_HOST,
     port: SMTP_PORT,
@@ -81,20 +87,93 @@ function createEmailTransport() {
       user: SMTP_USER,
       pass: SMTP_PASS,
     },
+    connectionTimeout: 30000, // 30 секунд на подключение
+    greetingTimeout: 30000, // 30 секунд на приветствие
+    socketTimeout: 60000, // 60 секунд на операции
+    logger: true, // Включаем логирование
+    debug: true, // Включаем отладку
   });
 }
 
 const emailTransport = createEmailTransport();
 
 /**
- * Отправка email с PDF гайдом
+ * Проверка SMTP соединения
  */
-async function sendGuideEmail(customerEmail, customerName) {
-  if (!emailTransport) {
-    console.error("SMTP не настроен, email не отправлен");
+async function verifySmtpConnection() {
+  if (!emailTransport) return false;
+
+  try {
+    console.log("Проверка SMTP соединения...");
+    await emailTransport.verify();
+    console.log("SMTP соединение: OK");
+    return true;
+  } catch (error) {
+    console.error("SMTP соединение: ОШИБКА -", error.message);
+    return false;
+  }
+}
+
+// Проверяем SMTP при старте (асинхронно)
+verifySmtpConnection();
+
+/**
+ * Отправка email через Resend API (альтернатива SMTP)
+ * https://resend.com/docs/api-reference/emails/send-email
+ */
+async function sendEmailViaResend(customerEmail, customerName, pdfBuffer) {
+  if (!RESEND_API_KEY) {
     return false;
   }
 
+  const response = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${RESEND_API_KEY}`,
+    },
+    body: JSON.stringify({
+      from: RESEND_FROM,
+      to: customerEmail,
+      subject: "Ваш гайд по Чжанцзяцзе",
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h1 style="color: #2d5016;">Спасибо за покупку!</h1>
+          <p>Здравствуйте${customerName ? `, ${customerName}` : ""}!</p>
+          <p>Благодарим вас за покупку гайда по Чжанцзяцзе.</p>
+          <p>Ваш гайд прикреплён к этому письму. Скачайте его и наслаждайтесь путешествием!</p>
+          <p>Если у вас возникнут вопросы, пишите на <a href="mailto:gostlix20201@gmail.com">gostlix20201@gmail.com</a></p>
+          <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
+          <p style="color: #666; font-size: 12px;">
+            Березнёв Дмитрий Алексеевич<br>
+            Самозанятый, ИНН: 695005289893
+          </p>
+        </div>
+      `,
+      attachments: [
+        {
+          filename: "Гайд-по-Чжанцзяцзе.pdf",
+          content: pdfBuffer.toString("base64"),
+        },
+      ],
+    }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Resend API error: ${response.status} - ${errorText}`);
+  }
+
+  const data = await response.json();
+  console.log(`Email отправлен через Resend: ${customerEmail}, id: ${data.id}`);
+  return true;
+}
+
+/**
+ * Отправка email с PDF гайдом
+ * Пробует SMTP, если не работает — Resend API
+ */
+async function sendGuideEmail(customerEmail, customerName) {
   if (!existsSync(PDF_PATH)) {
     console.error(`PDF файл не найден: ${PDF_PATH}`);
     return false;
@@ -102,43 +181,60 @@ async function sendGuideEmail(customerEmail, customerName) {
 
   const pdfBuffer = readFileSync(PDF_PATH);
 
-  const mailOptions = {
-    from: SMTP_FROM,
-    to: customerEmail,
-    subject: "Ваш гайд по Чжанцзяцзе",
-    html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h1 style="color: #2d5016;">Спасибо за покупку!</h1>
-        <p>Здравствуйте${customerName ? `, ${customerName}` : ""}!</p>
-        <p>Благодарим вас за покупку гайда по Чжанцзяцзе.</p>
-        <p>Ваш гайд прикреплён к этому письму. Скачайте его и наслаждайтесь путешествием!</p>
-        <p>Если у вас возникнут вопросы, пишите на <a href="mailto:gostlix20201@gmail.com">gostlix20201@gmail.com</a></p>
-        <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
-        <p style="color: #666; font-size: 12px;">
-          Березнёв Дмитрий Алексеевич<br>
-          Самозанятый, ИНН: 695005289893
-        </p>
-      </div>
-    `,
-    attachments: [
-      {
-        filename: "Гайд-по-Чжанцзяцзе.pdf",
-        content: pdfBuffer,
-        contentType: "application/pdf",
-      },
-    ],
-  };
+  // Пробуем отправить через SMTP
+  if (emailTransport) {
+    const mailOptions = {
+      from: SMTP_FROM,
+      to: customerEmail,
+      subject: "Ваш гайд по Чжанцзяцзе",
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h1 style="color: #2d5016;">Спасибо за покупку!</h1>
+          <p>Здравствуйте${customerName ? `, ${customerName}` : ""}!</p>
+          <p>Благодарим вас за покупку гайда по Чжанцзяцзе.</p>
+          <p>Ваш гайд прикреплён к этому письму. Скачайте его и наслаждайтесь путешествием!</p>
+          <p>Если у вас возникнут вопросы, пишите на <a href="mailto:gostlix20201@gmail.com">gostlix20201@gmail.com</a></p>
+          <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
+          <p style="color: #666; font-size: 12px;">
+            Березнёв Дмитрий Алексеевич<br>
+            Самозанятый, ИНН: 695005289893
+          </p>
+        </div>
+      `,
+      attachments: [
+        {
+          filename: "Гайд-по-Чжанцзяцзе.pdf",
+          content: pdfBuffer,
+          contentType: "application/pdf",
+        },
+      ],
+    };
 
-  try {
-    const info = await emailTransport.sendMail(mailOptions);
-    console.log(
-      `Email отправлен: ${customerEmail}, messageId: ${info.messageId}`,
-    );
-    return true;
-  } catch (error) {
-    console.error(`Ошибка отправки email на ${customerEmail}:`, error.message);
-    return false;
+    try {
+      const info = await emailTransport.sendMail(mailOptions);
+      console.log(
+        `Email отправлен через SMTP: ${customerEmail}, messageId: ${info.messageId}`,
+      );
+      return true;
+    } catch (error) {
+      console.error(`SMTP ошибка: ${error.message}`);
+      console.log("Пробуем Resend API...");
+    }
   }
+
+  // Пробуем отправить через Resend API
+  if (RESEND_API_KEY) {
+    try {
+      return await sendEmailViaResend(customerEmail, customerName, pdfBuffer);
+    } catch (error) {
+      console.error(`Resend ошибка: ${error.message}`);
+    }
+  }
+
+  console.error(
+    "Не удалось отправить email: ни SMTP, ни Resend не настроены или не работают",
+  );
+  return false;
 }
 
 /**
