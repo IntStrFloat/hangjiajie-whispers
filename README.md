@@ -1,13 +1,18 @@
 # Hangjiajie Whispers
 
-Лендинг с PDF-гайдом по национальному парку Чжанцзяцзе. Платежи через Robokassa.
+Лендинг с гайдом по национальному парку Чжанцзяцзе. Платежи через ЮKassa.
 
 ## Локальная разработка
 
 ```bash
 npm install
 cp .env.example .env
-# Заполните .env
+# Заполните .env (YOOKASSA_SHOP_ID, YOOKASSA_SECRET_KEY, VITE_PDF_URL)
+
+# Запуск API сервера (в отдельном терминале)
+npm run server
+
+# Запуск фронтенда
 npm run dev
 ```
 

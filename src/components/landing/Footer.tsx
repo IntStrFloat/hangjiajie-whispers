@@ -5,8 +5,8 @@ import { ExternalLink, FileText, Mail, Phone, Send } from "lucide-react";
 const CONTACT_EMAIL = "gostlix20201@gmail.com";
 const CONTACT_TELEGRAM = "https://t.me/frontendEnjoyer";
 const CONTACT_TELEGRAM_LABEL = "@frontendEnjoyer";
-const CONTACT_PHONE: string = "+7 (915) 739-75-70"; // Укажите телефон для соответствия требованиям Robokassa (например: "+7 (999) 123-45-67")
-const SELLER_CITY = "Москва"; // Город для самозанятого (рекомендация Robokassa)
+const CONTACT_PHONE: string = "+7 (915) 739-75-70"; // Укажите телефон для соответствия требованиям ЮKassa
+const SELLER_CITY = "Москва"; // Город для самозанятого
 
 export function Footer() {
   return (
@@ -50,7 +50,7 @@ export function Footer() {
             .
           </p>
 
-          {/* Контакты: телефон, e-mail, Telegram (требования Robokassa) */}
+          {/* Контакты: телефон, e-mail, Telegram */}
           <div className="flex flex-col items-center gap-2">
             <p className="font-medium text-primary-foreground">
               Связаться со мной
@@ -84,7 +84,7 @@ export function Footer() {
             </div>
           </div>
 
-          {/* Юридическая информация: самозанятый ФИО, ИНН, город (требования Robokassa) */}
+          {/* Юридическая информация: самозанятый ФИО, ИНН, город */}
           <div className="text-sm md:text-base font-light">
             <p>Березнёв Дмитрий Алексеевич</p>
             <p>Самозанятый</p>

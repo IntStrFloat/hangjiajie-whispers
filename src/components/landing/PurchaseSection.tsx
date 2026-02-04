@@ -83,7 +83,7 @@ export function PurchaseSection() {
             />
           </motion.div>
 
-          {/* Способ получения и характеристики (требования Robokassa) */}
+          {/* Способ получения и характеристики */}
           <motion.p
             initial={{ opacity: 0 }}
             animate={isVisible ? { opacity: 1 } : {}}
