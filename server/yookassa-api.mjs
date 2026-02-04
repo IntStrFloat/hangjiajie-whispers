@@ -13,6 +13,32 @@
 
 import http from "node:http";
 import { randomUUID } from "node:crypto";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
+
+// Загрузка переменных из .env файла
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const envPath = join(__dirname, "..", ".env");
+
+try {
+  const envFile = readFileSync(envPath, "utf-8");
+  envFile.split("\n").forEach((line) => {
+    const trimmedLine = line.trim();
+    if (trimmedLine && !trimmedLine.startsWith("#")) {
+      const [key, ...valueParts] = trimmedLine.split("=");
+      if (key && valueParts.length > 0) {
+        const value = valueParts.join("=").trim();
+        if (!process.env[key]) {
+          process.env[key] = value;
+        }
+      }
+    }
+  });
+} catch (error) {
+  console.warn("Could not load .env file:", error.message);
+}
 
 const PORT = Number(process.env.PORT) || 3001;
 const SHOP_ID = process.env.YOOKASSA_SHOP_ID;
@@ -64,9 +90,15 @@ function sendJson(res, statusCode, data) {
 async function createPayment({ amount, description, returnUrl, metadata }) {
   const idempotenceKey = randomUUID();
 
+  // Преобразуем сумму в строку с двумя знаками после запятой (требование API)
+  const amountValue =
+    typeof amount === "number"
+      ? amount.toFixed(2)
+      : String(Number(amount).toFixed(2));
+
   const paymentData = {
     amount: {
-      value: amount.toFixed(2),
+      value: amountValue,
       currency: "RUB",
     },
     capture: true,
@@ -186,9 +218,22 @@ const server = http.createServer(async (req, res) => {
   }
 
   try {
+    // Логирование входящих запросов
+    console.log(`${req.method} ${pathname}`);
+
+    // Health check endpoint
+    if (req.method === "GET" && pathname === "/api/health") {
+      sendJson(res, 200, { status: "ok", timestamp: new Date().toISOString() });
+      return;
+    }
+
     // POST /api/create-payment — создание платежа
     if (req.method === "POST" && pathname === "/api/create-payment") {
       const body = await parseJsonBody(req);
+      console.log("Create payment request:", {
+        amount: body.amount,
+        returnUrl: body.returnUrl,
+      });
 
       if (!body.amount || body.amount <= 0) {
         sendJson(res, 400, { error: "Invalid amount" });
