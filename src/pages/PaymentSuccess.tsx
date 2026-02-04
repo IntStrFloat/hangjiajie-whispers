@@ -1,72 +1,84 @@
-import { useEffect, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useEffect, useState, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Download, Loader2, CheckCircle2, XCircle } from "lucide-react";
 import { toast } from "sonner";
-import CryptoJS from "crypto-js";
+
+// URL API сервера (тот же домен, проксируется через Nginx)
+const getApiUrl = (): string => {
+  return window.location.origin;
+};
 
 const PaymentSuccess = () => {
-  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [paymentStatus, setPaymentStatus] = useState<
     "checking" | "success" | "fail"
   >("checking");
   const [isDownloading, setIsDownloading] = useState(false);
+  const [checkAttempts, setCheckAttempts] = useState(0);
+
+  const checkPaymentStatus = useCallback(async (paymentId: string) => {
+    try {
+      const apiUrl = getApiUrl();
+      const response = await fetch(`${apiUrl}/api/payment/${paymentId}`);
+
+      if (!response.ok) {
+        throw new Error("Ошибка при проверке статуса платежа");
+      }
+
+      const data = await response.json();
+
+      if (data.status === "succeeded" || data.paid === true) {
+        setPaymentStatus("success");
+        sessionStorage.removeItem("yookassa_payment_id");
+        toast.success("Платеж успешно обработан!");
+        return true;
+      }
+
+      if (data.status === "canceled") {
+        setPaymentStatus("fail");
+        sessionStorage.removeItem("yookassa_payment_id");
+        toast.error("Платеж был отменён");
+        return true;
+      }
+
+      // Платеж ещё в обработке (pending, waiting_for_capture)
+      return false;
+    } catch (error) {
+      console.error("Error checking payment:", error);
+      return false;
+    }
+  }, []);
 
   useEffect(() => {
-    const checkPayment = () => {
-      const invoiceId = searchParams.get("InvId");
-      const signature = searchParams.get("SignatureValue");
-      const outSum = searchParams.get("OutSum");
-      const errorCode = searchParams.get("ErrorCode");
+    const paymentId = sessionStorage.getItem("yookassa_payment_id");
 
-      // Если есть код ошибки, платеж не прошел
-      if (errorCode) {
+    if (!paymentId) {
+      setPaymentStatus("fail");
+      toast.error("Платеж не найден. Попробуйте снова.");
+      return;
+    }
+
+    // Проверяем статус платежа
+    const checkPayment = async () => {
+      const isCompleted = await checkPaymentStatus(paymentId);
+
+      if (!isCompleted && checkAttempts < 10) {
+        // Платёж ещё в обработке, проверяем снова через 2 секунды
+        setTimeout(() => {
+          setCheckAttempts((prev) => prev + 1);
+        }, 2000);
+      } else if (!isCompleted) {
+        // Превышено количество попыток
         setPaymentStatus("fail");
-        const errorMessage = getRobokassaErrorMessage(errorCode);
-        toast.error(errorMessage);
-        return;
-      }
-
-      // Проверяем наличие необходимых параметров
-      if (!invoiceId || !signature || !outSum) {
-        setPaymentStatus("fail");
-        toast.error("Неверные параметры платежа");
-        return;
-      }
-
-      // Проверяем подпись редиректа SuccessURL (документация: OutSum:InvId:Пароль#1)
-      const password1 = import.meta.env.VITE_ROBOKASSA_PASSWORD_1;
-      const savedInvoiceId = sessionStorage.getItem("robokassa_invoice_id");
-
-      if (savedInvoiceId !== invoiceId) {
-        setPaymentStatus("fail");
-        toast.error("Неверный номер заказа");
-        return;
-      }
-
-      if (password1) {
-        const expectedSignature = generateSuccessUrlSignature(
-          outSum,
-          invoiceId,
-          password1,
+        toast.error(
+          "Не удалось подтвердить платеж. Проверьте почту или свяжитесь с поддержкой.",
         );
-
-        if (signature.toLowerCase() !== expectedSignature.toLowerCase()) {
-          setPaymentStatus("fail");
-          toast.error("Неверная подпись платежа");
-          return;
-        }
       }
-
-      // Платеж успешен
-      setPaymentStatus("success");
-      sessionStorage.removeItem("robokassa_invoice_id");
-      toast.success("Платеж успешно обработан!");
     };
 
     checkPayment();
-  }, [searchParams]);
+  }, [checkAttempts, checkPaymentStatus]);
 
   const handleDownload = async () => {
     const pdfUrl = import.meta.env.VITE_PDF_URL;
@@ -97,51 +109,6 @@ const PaymentSuccess = () => {
     }
   };
 
-  // Подпись для SuccessURL по документации: OutSum:InvId:Пароль#1
-  const generateSuccessUrlSignature = (
-    outSum: string,
-    invoiceId: string,
-    password1: string,
-  ): string => {
-    const signatureString = `${outSum}:${invoiceId}:${password1}`;
-    return CryptoJS.MD5(signatureString).toString();
-  };
-
-  // Получение сообщения об ошибке по коду из документации Robokassa
-  const getRobokassaErrorMessage = (errorCode: string): string => {
-    const errorMessages: Record<string, string> = {
-      "20": "Внутренняя ошибка сервиса. Обратитесь в поддержку Robokassa",
-      "21": "Внутренняя ошибка сервиса. Обратитесь в поддержку Robokassa",
-      "22": "Внутренняя ошибка сервиса. Обратитесь в поддержку Robokassa",
-      "23": "Внутренняя ошибка сервиса. Проверьте настройки магазина в личном кабинете и убедитесь, что используете правильные тестовые пароли",
-      "24": "Внутренняя ошибка сервиса. Обратитесь в поддержку Robokassa",
-      "25": "Магазин не активирован. Активируйте магазин в личном кабинете",
-      "26": "Магазин не найден. Проверьте правильность MerchantLogin",
-      "27": "Внутренняя ошибка сервиса. Обратитесь в поддержку Robokassa",
-      "28": "Внутренняя ошибка сервиса. Обратитесь в поддержку Robokassa",
-      "29": "Неверный параметр SignatureValue. Проверьте пароль #1 и убедитесь, что используете тестовые пароли в тестовом режиме",
-      "30": "Неверный параметр счёта. Проверьте обязательные и необязательные параметры",
-      "31": "Неверная сумма платежа. Сумма должна быть больше нуля",
-      "32": "Внутренняя ошибка сервиса. Обратитесь в поддержку Robokassa",
-      "33": "Время, отведённое на оплату счёта, истекло",
-      "34": "Услуга рекуррентных платежей не разрешена магазину",
-      "35": "Неверные параметры для инициализации рекуррентного платежа",
-      "36": "Внутренняя ошибка сервиса. Обратитесь в поддержку Robokassa",
-      "37": "Внутренняя ошибка сервиса. Обратитесь в поддержку Robokassa",
-      "40": "Повторная оплата счёта с тем же номером невозможна. Используйте уникальный InvId",
-      "41": "Ошибка на старте операции. Повторите попытку",
-      "43": "Внутренняя ошибка сервиса. Обратитесь в поддержку Robokassa",
-      "51": "Срок оплаты счёта истек",
-      "52": "Попытка повторной оплаты уже оплаченного счёта",
-      "53": "Счёт не найден",
-      "64": "Функционал холдирования средств запрещён для магазина",
-      "65": "Некорректные параметры для холдирования",
-      "500": "Внутренняя ошибка сервиса. Обратитесь в поддержку Robokassa",
-    };
-
-    return errorMessages[errorCode] || `Ошибка платежа (код: ${errorCode})`;
-  };
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-forest-deep px-6">
       <div className="max-w-md w-full bg-background rounded-lg p-8 text-center space-y-6">
@@ -151,7 +118,9 @@ const PaymentSuccess = () => {
             <h1 className="text-2xl font-serif text-foreground">
               Проверка платежа...
             </h1>
-            <p className="text-muted-foreground">Пожалуйста, подождите</p>
+            <p className="text-muted-foreground">
+              Пожалуйста, подождите. Проверка {checkAttempts + 1}/10
+            </p>
           </>
         )}
 
