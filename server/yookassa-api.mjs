@@ -8,7 +8,7 @@
  * - GET /api/payment/:id — проверка статуса платежа
  *
  * Запуск: node server/yookassa-api.mjs
- * Переменные окружения: YOOKASSA_SHOP_ID, YOOKASSA_SECRET_KEY, PORT, SMTP_*
+ * Переменные окружения: YOOKASSA_SHOP_ID, YOOKASSA_SECRET_KEY, PORT, RESEND_API_KEY, RESEND_FROM
  */
 
 import http from "node:http";
@@ -16,7 +16,6 @@ import { randomUUID } from "node:crypto";
 import { readFileSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
-import { createTransport } from "nodemailer";
 
 // Загрузка переменных из .env файла
 const __filename = fileURLToPath(import.meta.url);
@@ -46,12 +45,9 @@ const SHOP_ID = process.env.YOOKASSA_SHOP_ID;
 const SECRET_KEY = process.env.YOOKASSA_SECRET_KEY;
 const YOOKASSA_API_URL = "https://api.yookassa.ru/v3";
 
-// SMTP настройки для отправки email
-const SMTP_HOST = process.env.SMTP_HOST;
-const SMTP_PORT = Number(process.env.SMTP_PORT) || 587;
-const SMTP_USER = process.env.SMTP_USER;
-const SMTP_PASS = process.env.SMTP_PASS;
-const SMTP_FROM = process.env.SMTP_FROM || SMTP_USER;
+// Resend API для отправки email
+const RESEND_API_KEY = process.env.RESEND_API_KEY;
+const RESEND_FROM = process.env.RESEND_FROM;
 
 // Путь к PDF файлу (имя файла из .env или по умолчанию)
 const PDF_FILENAME = process.env.PDF_FILENAME || "Гайд.pdf";
@@ -65,33 +61,14 @@ const corsHeaders = {
 };
 
 /**
- * Создание SMTP транспорта для отправки email
- */
-function createEmailTransport() {
-  if (!SMTP_HOST || !SMTP_USER || !SMTP_PASS) {
-    console.warn("SMTP не настроен. Email не будут отправляться.");
-    return null;
-  }
-
-  return createTransport({
-    host: SMTP_HOST,
-    port: SMTP_PORT,
-    secure: SMTP_PORT === 465,
-    auth: {
-      user: SMTP_USER,
-      pass: SMTP_PASS,
-    },
-  });
-}
-
-const emailTransport = createEmailTransport();
-
-/**
- * Отправка email с PDF гайдом
+ * Отправка email с PDF гайдом через Resend API
+ * https://resend.com/docs/api-reference/emails/send-email
  */
 async function sendGuideEmail(customerEmail, customerName) {
-  if (!emailTransport) {
-    console.error("SMTP не настроен, email не отправлен");
+  if (!RESEND_API_KEY || !RESEND_FROM) {
+    console.error(
+      "Resend API не настроен (RESEND_API_KEY или RESEND_FROM отсутствует)",
+    );
     return false;
   }
 
@@ -102,38 +79,47 @@ async function sendGuideEmail(customerEmail, customerName) {
 
   const pdfBuffer = readFileSync(PDF_PATH);
 
-  const mailOptions = {
-    from: SMTP_FROM,
-    to: customerEmail,
-    subject: "Ваш гайд по Чжанцзяцзе",
-    html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h1 style="color: #2d5016;">Спасибо за покупку!</h1>
-        <p>Здравствуйте${customerName ? `, ${customerName}` : ""}!</p>
-        <p>Благодарим вас за покупку гайда по Чжанцзяцзе.</p>
-        <p>Ваш гайд прикреплён к этому письму. Скачайте его и наслаждайтесь путешествием!</p>
-        <p>Если у вас возникнут вопросы, пишите на <a href="mailto:gostlix20201@gmail.com">gostlix20201@gmail.com</a></p>
-        <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
-        <p style="color: #666; font-size: 12px;">
-          Березнёв Дмитрий Алексеевич<br>
-          Самозанятый, ИНН: 695005289893
-        </p>
-      </div>
-    `,
-    attachments: [
-      {
-        filename: "Гайд-по-Чжанцзяцзе.pdf",
-        content: pdfBuffer,
-        contentType: "application/pdf",
-      },
-    ],
-  };
-
   try {
-    const info = await emailTransport.sendMail(mailOptions);
-    console.log(
-      `Email отправлен: ${customerEmail}, messageId: ${info.messageId}`,
-    );
+    const response = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${RESEND_API_KEY}`,
+      },
+      body: JSON.stringify({
+        from: RESEND_FROM,
+        to: customerEmail,
+        subject: "Ваш гайд по Чжанцзяцзе",
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h1 style="color: #2d5016;">Спасибо за покупку!</h1>
+            <p>Здравствуйте${customerName ? `, ${customerName}` : ""}!</p>
+            <p>Благодарим вас за покупку гайда по Чжанцзяцзе.</p>
+            <p>Ваш гайд прикреплён к этому письму. Скачайте его и наслаждайтесь путешествием!</p>
+            <p>Если у вас возникнут вопросы, пишите на <a href="mailto:gostlix20201@gmail.com">gostlix20201@gmail.com</a></p>
+            <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
+            <p style="color: #666; font-size: 12px;">
+              Березнёв Дмитрий Алексеевич<br>
+              Самозанятый, ИНН: 695005289893
+            </p>
+          </div>
+        `,
+        attachments: [
+          {
+            filename: "Гайд-по-Чжанцзяцзе.pdf",
+            content: pdfBuffer.toString("base64"),
+          },
+        ],
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Resend API error: ${response.status} - ${errorText}`);
+    }
+
+    const data = await response.json();
+    console.log(`Email отправлен: ${customerEmail}, id: ${data.id}`);
     return true;
   } catch (error) {
     console.error(`Ошибка отправки email на ${customerEmail}:`, error.message);
@@ -332,7 +318,7 @@ const server = http.createServer(async (req, res) => {
       sendJson(res, 200, {
         status: "ok",
         timestamp: new Date().toISOString(),
-        smtp: emailTransport ? "configured" : "not configured",
+        resend: RESEND_API_KEY && RESEND_FROM ? "configured" : "not configured",
         pdfExists: existsSync(PDF_PATH),
       });
       return;
@@ -433,7 +419,7 @@ server.listen(PORT, () => {
   console.log(`  POST /api/webhook — webhook от ЮKassa`);
   console.log(`  GET /api/payment/:id — проверка статуса платежа`);
   console.log(
-    `\nEmail configuration: ${emailTransport ? "OK" : "NOT CONFIGURED"}`,
+    `\nResend API: ${RESEND_API_KEY && RESEND_FROM ? "OK" : "NOT CONFIGURED"}`,
   );
   console.log(
     `PDF file: ${existsSync(PDF_PATH) ? "OK" : "NOT FOUND"} (${PDF_PATH})`,
